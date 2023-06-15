@@ -1,0 +1,15 @@
+[package]
+name = "simalign"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ciborium = "0.2.1"
+clap = { version = "4.3.3", features = ["derive"] }
+clilog = "0.2.3"
+compact_str = { version = "0.7.0", features = ["serde"] }
+indexmap = { version = "1.9.3", features = ["serde"] }
+serde = { version = "1.0.164", features = ["derive"] }
+vcd-ng = "0.1.2"
