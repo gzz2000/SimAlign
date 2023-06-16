@@ -11,61 +11,10 @@ use serde::{ Serialize, Deserialize };
 use vcd_ng::{ Parser, FastFlow, ReferenceIndex, Var, ScopeItem, FastFlowToken, FFValueChange };
 use std::fs::File;
 use std::io::{ self, BufReader };
-use std::hash::{ Hash, Hasher };
-use std::borrow::Borrow;
 
-/// A general hier name with index, used as hashing.
-trait HierNameIdx {
-    fn hier(&self) -> &[CompactString];
-    fn idx(&self) -> Option<i32>;
-}
-
-impl Hash for dyn HierNameIdx + '_ {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.hier().hash(state);
-        self.idx().hash(state);
-    }
-}
-
-impl PartialEq for dyn HierNameIdx + '_ {
-    #[inline]
-    fn eq(&self, other: &Self) -> bool {
-        self.idx() == other.idx() && self.hier() == other.hier()
-    }
-}
-
-impl Eq for dyn HierNameIdx + '_ {}
-
-impl HierNameIdx for (Vec<CompactString>, Option<i32>) {
-    #[inline]
-    fn hier(&self) -> &[CompactString] {
-        &self.0
-    }
-    
-    #[inline]
-    fn idx(&self) -> Option<i32> {
-        self.1
-    }
-}
-
-impl<'i> Borrow<dyn HierNameIdx + 'i> for (Vec<CompactString>, Option<i32>) {
-    #[inline]
-    fn borrow(&self) -> &(dyn HierNameIdx + 'i) {
-        self
-    }
-}
-
-impl HierNameIdx for (&Vec<CompactString>, Option<i32>) {
-    #[inline]
-    fn hier(&self) -> &[CompactString] {
-        &self.0
-    }
-    
-    #[inline]
-    fn idx(&self) -> Option<i32> {
-        self.1
-    }
-}
+mod hid;
+pub use hid::{ HId, RefHId };
+use hid::HierNameIdx;
 
 /// The hash database.
 #[derive(Serialize, Deserialize, Debug)]
@@ -74,7 +23,7 @@ pub struct HashDB {
     ///
     /// Vector bits will be mapped separately like
     /// (xxx, 0) -> (start, 1), regardless of the declaration.
-    pub name2id: IndexMap<(Vec<CompactString>, Option<i32>), usize>,
+    pub name2id: IndexMap<HId, usize>,
     /// The flattened hash values.
     pub hashes: Vec<u64>,
 }
@@ -225,7 +174,7 @@ impl HashDB {
                     Some(Range(msb, _lsb)) => Some(msb)
                 };
 
-                let start = match self.name2id.get(&(
+                let start = match self.name2id.get(&RefHId(
                     hier, first_bit
                 ) as &dyn HierNameIdx) {
                     // name2id got the first entry.
@@ -243,7 +192,7 @@ impl HashDB {
                         };
                         enumerate_bits(var.index, &mut |idx, offset| {
                             self.name2id.insert(
-                                (hier.clone(), idx),
+                                HId(hier.clone(), idx),
                                 start + offset);
                         });
                         start

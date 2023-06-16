@@ -11,7 +11,9 @@
 
 use simalign::HashDB;
 use ciborium::{ from_reader, into_writer };
+use std::collections::HashSet;
 use std::fs::File;
+use std::io::{ BufReader, BufWriter };
 
 #[derive(clap::Parser, Debug)]
 struct SimStrobeArgs {
@@ -33,17 +35,21 @@ struct SimStrobeArgs {
 fn main() {
     clilog::init_stderr_color_debug();
     let args = <SimStrobeArgs as clap::Parser>::parse();
-    println!("args: {:?}", args);
+    println!("args: {:#?}", args);
     let mut db = match &args.db_input {
         Some(dbpath) => from_reader(
-            File::open(dbpath).unwrap()
+            BufReader::new(File::open(dbpath).unwrap())
         ).unwrap(),
         None => HashDB::new()
     };
     db.feed_vcd(&args.vcd, args.strobe_start, args.strobe_period)
         .unwrap();
+    let num_bit_types = db.hashes.iter().copied()
+        .collect::<HashSet<_>>()
+        .len();
+    println!("number of bit types = {num_bit_types}");
     into_writer(
         &db,
-        File::create(&args.db_output).unwrap()
+        BufWriter::new(File::create(&args.db_output).unwrap())
     ).unwrap();
 }

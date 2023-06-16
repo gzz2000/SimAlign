@@ -11,5 +11,6 @@ clap = { version = "4.3.3", features = ["derive"] }
 clilog = "0.2.3"
 compact_str = { version = "0.7.0", features = ["serde"] }
 indexmap = { version = "1.9.3", features = ["serde"] }
+itertools = "0.10.5"
 serde = { version = "1.0.164", features = ["derive"] }
 vcd-ng = "0.1.2"
