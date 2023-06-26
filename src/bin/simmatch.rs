@@ -63,13 +63,20 @@ fn main() {
                      && v2.len() <= args.ignore_size)
              .count());
     // print all matched bit types..
-    for (h, (v1, v2)) in pool.iter()
-        .filter(|(_, (v1, v2))| v1.len() != 0 && v2.len() != 0
-                && v1.len() <= args.ignore_size
-                && v2.len() <= args.ignore_size)
-    {
-        println!("Hash {}: {{ {} }} = {{ {} }}",
-                 h, v1.iter().format(", "), v2.iter().format(", "));
+    for (h, (v1, v2)) in &pool {
+        if v1.len() == 0 || v2.len() == 0 {
+            continue
+        }
+        if v1.len() <= args.ignore_size
+            && v2.len() <= args.ignore_size
+        {
+            println!("Hash {}: {{ {} }} = {{ {} }}",
+                     h, v1.iter().format(", "), v2.iter().format(", "));
+        }
+        else {
+            println!("Hash {} exceeded threshold (lens {}, {})",
+                     h, v1.len(), v2.len());
+        }
     }
 }
 
